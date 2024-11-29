@@ -1044,7 +1044,7 @@ function install_packaging() {
 #   None
 ##############################################################################
 function upgrade_cwctl() {
-    wget https://get.chatwoot.app/linux/install.sh -O /usr/local/bin/cwctl > /dev/null 2>&1 && chmod +x /usr/local/bin/cwctl
+    wget https://raw.githubusercontent.com/Eficaz-Sistemas/chatwoot/master/config/install.sh -O /usr/local/bin/cwctl > /dev/null 2>&1 && chmod +x /usr/local/bin/cwctl
 }
 
 ##############################################################################
