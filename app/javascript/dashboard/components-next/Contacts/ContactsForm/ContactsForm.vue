@@ -1,7 +1,7 @@
 <script setup>
 import { computed, reactive, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { required, email, minLength } from '@vuelidate/validators';
+import { required, email } from '@vuelidate/validators';
 import { useVuelidate } from '@vuelidate/core';
 import { splitName } from '@chatwoot/utils';
 import countries from 'shared/constants/countries.js';
@@ -35,17 +35,17 @@ const FORM_CONFIG = {
   EMAIL_ADDRESS: { field: 'email' },
   PHONE_NUMBER: { field: 'phoneNumber' },
   CITY: { field: 'additionalAttributes.city' },
-  COUNTRY: { field: 'additionalAttributes.country' },
+  COUNTRY: { field: 'additionalAttributes.countryCode' },
   BIO: { field: 'additionalAttributes.description' },
   COMPANY_NAME: { field: 'additionalAttributes.companyName' },
 };
 
 const SOCIAL_CONFIG = {
-  FACEBOOK: 'i-ri-facebook-circle-fill',
-  GITHUB: 'i-ri-github-fill',
-  INSTAGRAM: 'i-ri-instagram-line',
   LINKEDIN: 'i-ri-linkedin-box-fill',
+  FACEBOOK: 'i-ri-facebook-circle-fill',
+  INSTAGRAM: 'i-ri-instagram-line',
   TWITTER: 'i-ri-twitter-x-fill',
+  GITHUB: 'i-ri-github-fill',
 };
 
 const defaultState = {
@@ -74,7 +74,7 @@ const defaultState = {
 const state = reactive({ ...defaultState });
 
 const validationRules = {
-  firstName: { required, minLength: minLength(2) },
+  firstName: { required },
   email: { email },
 };
 
@@ -94,13 +94,13 @@ const prepareStateBasedOnProps = () => {
     phoneNumber,
     additionalAttributes = {},
   } = props.contactData || {};
-  const { firstName, lastName } = splitName(name);
+  const { firstName, lastName } = splitName(name || '');
   const {
-    description,
-    companyName,
-    countryCode,
-    country,
-    city,
+    description = '',
+    companyName = '',
+    countryCode = '',
+    country = '',
+    city = '',
     socialProfiles = {},
   } = additionalAttributes || {};
 
@@ -123,7 +123,7 @@ const prepareStateBasedOnProps = () => {
 };
 
 const countryOptions = computed(() =>
-  countries.map(({ name }) => ({ label: name, value: name }))
+  countries.map(({ name, id }) => ({ label: name, value: id }))
 );
 
 const editDetailsForm = computed(() =>
@@ -205,13 +205,17 @@ const getMessageType = key => {
 };
 
 const handleCountrySelection = value => {
-  const selectedCountry = countries.find(option => option.name === value);
-  state.additionalAttributes.countryCode = selectedCountry?.id || '';
+  const selectedCountry = countries.find(option => option.id === value);
+  state.additionalAttributes.country = selectedCountry?.name || '';
   emit('update', state);
 };
 
 const resetValidation = () => {
   v$.value.$reset();
+};
+
+const resetForm = () => {
+  Object.assign(state, defaultState);
 };
 
 watch(() => props.contactData, prepareStateBasedOnProps, {
@@ -224,6 +228,7 @@ defineExpose({
   state,
   resetValidation,
   isFormInvalid,
+  resetForm,
 });
 </script>
 
@@ -237,15 +242,14 @@ defineExpose({
         <template v-for="item in editDetailsForm" :key="item.key">
           <ComboBox
             v-if="item.key === 'COUNTRY'"
-            v-model="state.additionalAttributes.country"
+            v-model="state.additionalAttributes.countryCode"
             :options="countryOptions"
             :placeholder="item.placeholder"
             class="[&>div>button]:h-8"
             :class="{
-              '[&>div>button]:bg-n-alpha-black2 [&>div>button]:!outline-transparent':
+              '[&>div>button]:bg-n-alpha-black2 [&>div>button:not(.focused)]:!outline-transparent':
                 !isDetailsView,
-              '[&>div>button]:!outline-n-weak [&>div>button]:hover:!outline-n-strong [&>div>button]:!bg-n-alpha-black2':
-                isDetailsView,
+              '[&>div>button]:!bg-n-alpha-black2': isDetailsView,
             }"
             @update:model-value="handleCountrySelection"
           />
@@ -261,7 +265,9 @@ defineExpose({
             :placeholder="item.placeholder"
             :message-type="getMessageType(item.key)"
             :custom-input-class="`h-8 !pt-1 !pb-1 ${
-              !isDetailsView ? '[&:not(.error)]:!border-transparent' : ''
+              !isDetailsView
+                ? '[&:not(.error,.focus)]:!outline-transparent'
+                : ''
             }`"
             class="w-full"
             @input="
@@ -298,7 +304,7 @@ defineExpose({
             v-model="
               state.additionalAttributes.socialProfiles[item.key.toLowerCase()]
             "
-            class="w-auto min-w-[100px] text-sm bg-transparent reset-base text-n-slate-12 dark:text-n-slate-12 placeholder:text-n-slate-10 dark:placeholder:text-n-slate-10"
+            class="w-auto min-w-[100px] text-sm bg-transparent outline-none reset-base text-n-slate-12 dark:text-n-slate-12 placeholder:text-n-slate-10 dark:placeholder:text-n-slate-10"
             :placeholder="item.placeholder"
             :size="item.placeholder.length"
             @input="emit('update', state)"

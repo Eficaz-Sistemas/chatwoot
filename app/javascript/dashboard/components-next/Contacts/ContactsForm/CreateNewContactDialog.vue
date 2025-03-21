@@ -27,11 +27,16 @@ const handleDialogConfirm = async () => {
   emit('create', contact.value);
 };
 
+const onSuccess = () => {
+  contactsFormRef.value?.resetForm();
+  dialogRef.value.close();
+};
+
 const closeDialog = () => {
   dialogRef.value.close();
 };
 
-defineExpose({ dialogRef, contactsFormRef });
+defineExpose({ dialogRef, contactsFormRef, onSuccess });
 </script>
 
 <template>
@@ -50,12 +55,13 @@ defineExpose({ dialogRef, contactsFormRef });
           @click="closeDialog"
         />
         <Button
+          type="submit"
           :label="
             t('CONTACTS_LAYOUT.HEADER.ACTIONS.CONTACT_CREATION.SAVE_CONTACT')
           "
           color="blue"
+          :disabled="contactsFormRef?.isFormInvalid"
           :is-loading="isCreatingContact"
-          @click="handleDialogConfirm"
         />
       </div>
     </template>

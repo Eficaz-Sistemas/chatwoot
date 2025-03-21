@@ -28,13 +28,13 @@ const handleDelete = () => {
 
 <template>
   <div
-    class="flex flex-col gap-2 px-6 py-2 border-b border-n-strong group/note"
+    class="flex flex-col gap-2 py-2 mx-6 border-b border-n-strong group/note"
   >
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-1.5 py-2.5 min-w-0">
         <Avatar
-          :name="note.user.name"
-          :src="note.user.thumbnail"
+          :name="note?.user?.name || 'Bot'"
+          :src="note?.user?.thumbnail || '/assets/images/chatwoot_bot.png'"
           :size="16"
           rounded-full
         />

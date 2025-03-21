@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, onMounted, nextTick } from 'vue';
 import { useSidebarContext } from './provider';
 import { useRoute, useRouter } from 'vue-router';
 import Policy from 'dashboard/components/policy.vue';
@@ -15,6 +15,7 @@ const props = defineProps({
   to: { type: Object, default: null },
   activeOn: { type: Array, default: () => [] },
   children: { type: Array, default: undefined },
+  getterKeys: { type: Object, default: () => ({}) },
 });
 
 const {
@@ -40,7 +41,12 @@ const hasChildren = computed(
 
 const accessibleItems = computed(() => {
   if (!hasChildren.value) return [];
-  return props.children.filter(child => isAllowed(child.to));
+  return props.children.filter(child => {
+    // If a item has no link, it means it's just a subgroup header
+    // So we don't need to check for permissions here, because there's nothing to
+    // access here anyway
+    return child.to && isAllowed(child.to);
+  });
 });
 
 const hasAccessibleChildren = computed(() => {
@@ -113,6 +119,13 @@ const toggleTrigger = () => {
   }
   setExpandedItem(props.name);
 };
+
+onMounted(async () => {
+  await nextTick();
+  if (hasActiveChild.value) {
+    setExpandedItem(props.name);
+  }
+});
 </script>
 
 <!-- eslint-disable-next-line vue/no-root-v-if -->
@@ -129,6 +142,7 @@ const toggleTrigger = () => {
       :name
       :label
       :to
+      :getter-keys="getterKeys"
       :is-active="isActive"
       :has-active-child="hasActiveChild"
       :expandable="hasChildren"
@@ -150,7 +164,7 @@ const toggleTrigger = () => {
           :active-child="activeChild"
         />
         <SidebarGroupLeaf
-          v-else
+          v-else-if="isAllowed(child.to)"
           v-show="isExpanded || activeChild?.name === child.name"
           v-bind="child"
           :active="activeChild?.name === child.name"
