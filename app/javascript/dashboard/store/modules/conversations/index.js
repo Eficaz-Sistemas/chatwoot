@@ -78,10 +78,7 @@ export const mutations = {
     }
   },
   [types.SET_ALL_ATTACHMENTS](_state, { id, data }) {
-    const attachments = _state.attachments[id] || [];
-
-    attachments.push(...data);
-    _state.attachments[id] = [...attachments];
+    _state.attachments[id] = [...data];
   },
   [types.SET_MISSING_MESSAGES](_state, { id, data }) {
     const [chat] = _state.allConversations.filter(c => c.id === id);
@@ -197,7 +194,6 @@ export const mutations = {
       const { conversation: { unread_count: unreadCount = 0 } = {} } = message;
       chat.unread_count = unreadCount;
       if (selectedChatId === conversationId) {
-        emitter.emit(BUS_EVENTS.FETCH_LABEL_SUGGESTIONS);
         emitter.emit(BUS_EVENTS.SCROLL_TO_MESSAGE);
       }
     }
@@ -205,6 +201,12 @@ export const mutations = {
 
   [types.ADD_CONVERSATION](_state, conversation) {
     _state.allConversations.push(conversation);
+  },
+
+  [types.DELETE_CONVERSATION](_state, conversationId) {
+    _state.allConversations = _state.allConversations.filter(
+      c => c.id !== conversationId
+    );
   },
 
   [types.UPDATE_CONVERSATION](_state, conversation) {
@@ -222,7 +224,6 @@ export const mutations = {
       const { messages, ...updates } = conversation;
       allConversations[index] = { ...selectedConversation, ...updates };
       if (_state.selectedChatId === conversation.id) {
-        emitter.emit(BUS_EVENTS.FETCH_LABEL_SUGGESTIONS);
         emitter.emit(BUS_EVENTS.SCROLL_TO_MESSAGE);
       }
     } else {
